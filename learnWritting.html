@@ -1,0 +1,179 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>学写一个字</title>
+<style>
+*{ margin:0; padding:0;}
+#colorOptions{width:420px;height:50px;border:5px solid red; margin-top:30px;}
+.colors{width:50px;height:50px;margin:0 10px 10px;float:left;}
+.active{border: 10px solid pink;}
+#red{background:red;}
+#black{background:black;}
+#yellow{background:yellow;}
+#green{background:green;}
+#gray{background:gray;}
+#purple{background:purple;}
+</style>
+<script src='jquery/jquery-3.1.1.min.js' type="text/javascript"></script>
+<script>
+window.onload=function(){
+
+  //alert( $(window).width());
+   var a1=new strokeWord('canvas');        
+   a1.int();//选择颜色的时候出现bug
+
+   var a2=new strokeWordSon('secondCanvas');        
+   a2.int();// a2.int is not a function
+   
+};
+
+function strokeWord(id){
+  this.myCanvas=document.getElementById(id);
+ //this.myCanvas=$("#canvas");
+  this.ctx=this.myCanvas.getContext("2d");//当使用this.myCanvas=$("#canvas")这个地方会出问题的,canvas画的图片只有一部分
+    
+  
+};
+strokeWord.prototype.int=function(id){
+
+
+    var that=this;//确保闭包不会令原本指向构造函数的this改变;
+    this.getColor(this);
+    this.drawGrid()
+   
+    this.myCanvas.onmousedown=function(e){
+    
+      
+	      e.preventDefault()
+	      that.beginStroke({x: e.clientX , y: e.clientY});
+
+	      that.myCanvas.onmousemove=function(e){
+	    	e.preventDefault()              
+	        that.moveStroke({x: e.clientX , y: e.clientY});         
+	      };
+	                                                  
+	      that.myCanvas.onmouseup=function(e){
+	    	e.preventDefault(); 
+	        that.endStroke();
+	      };
+	};   
+
+};
+strokeWord.prototype.drawGrid=function(){
+    this.canvasWidth=400; 
+     this.myCanvas.width=this.canvasWidth;//canvasWidth是数字类型
+     this.myCanvas.height=this.canvasWidth;
+
+     //alert(this.myCanvas.width)
+    this.ctx.save()
+    this.ctx.lineWidth=10
+    this.ctx.strokeStyle='green'
+    this.ctx.strokeRect(10,10,this.canvasWidth-20,this.canvasWidth-20);//strokeRect最好不要超出整个canvas的范围, 10,10是指边框罪外围的位置
+
+     this.ctx.beginPath();
+     this.ctx.strokeStyle='red'
+
+     this.ctx.moveTo(10,10);
+     this.ctx.lineTo(this.canvasWidth-10,this.canvasWidth-10);
+
+     this.ctx.moveTo(this.canvasWidth-10,10);
+     this.ctx.lineTo(10,this.canvasWidth-10);
+
+     this.ctx.moveTo((this.canvasWidth)/2,10);
+     this.ctx.lineTo((this.canvasWidth)/2,this.canvasWidth-10);
+
+     this.ctx.moveTo(10,(this.canvasWidth)/2);
+     this.ctx.lineTo(this.canvasWidth-10,this.canvasWidth/2);
+
+     this.ctx.closePath();
+     this.ctx.stroke();
+     
+};
+
+strokeWord.prototype.beginStroke=function(point){
+   //var offset=offset();
+ 
+  
+   this.lastLoc=this.windowToCanvas(point.x, point.y);
+   // ev = ev || window.event;  
+   // this.lastPosX=ev.clientX;
+   //  this.lastPosY=ev.clientY;
+   //  alert( this.lastPosY);
+     
+};
+
+strokeWord.prototype.moveStroke=function(point){
+
+	this.curLoc =this.windowToCanvas(point.x, point.y)
+    //draw
+     this.ctx.beginPath();
+     this.ctx.moveTo( this.lastLoc.x , this.lastLoc.y );
+     this.ctx.lineTo(this.curLoc.x ,this.curLoc.y );
+
+     this.ctx.strokeStyle =this.targetColor;
+ 
+     this.ctx.lineWidth = 12
+     this.ctx.lineCap = "round"
+     this.ctx.lineJoin = "round"
+     this.ctx.stroke()
+
+    this.lastLoc =this.curLoc
+   
+};
+ 
+strokeWord.prototype.getColor=function(){
+   
+   var that=this;
+   $(".colors").click(function(){
+
+  $(".colors").removeClass("active");
+
+  $(this).addClass("active");   
+   that.targetColor= $(this).css("background-color");
+  })
+
+};
+
+
+strokeWord.prototype.windowToCanvas=function( x , y ){
+   this.bbox = this.myCanvas.getBoundingClientRect()
+    return {'x':Math.round(x-this.bbox.left) , y:Math.round(y-this.bbox.top)}
+};
+
+strokeWord.prototype.endStroke=function(){
+    
+     this.myCanvas.onmousedown= this.myCanvas.onmousemove=null;
+
+};
+
+function strokeWordSon(id){
+	strokeWord.call(this,id);
+	extend(strokeWordSon.prototype,strokeWord.prototype);//!!strokeWord.prototype,只有复制原型对象的属性才能共享方法;
+};
+
+function extend(obj1,obj2){
+	for(attr in obj2){
+		obj1[attr]=obj2[attr];
+	};
+};
+
+</script>
+</head>
+
+<body>
+  <canvas id="canvas" style="border:1px solid #d3d3d3;"> </canvas>
+  <canvas id="secondCanvas" 
+  style="border:1px solid red;position:absolute;top:700px;left:600px;"> </canvas>
+  <div class="colorOptions">
+      <div class="colors active" id="red"></div>
+      <div class="colors" id="black"></div>
+      <div class="colors" id="yellow"></div>
+      <div class="colors" id="green"></div>
+      <div class="colors" id="gray"></div>
+      <div class="colors" id="purple"></div>
+      
+  </div>
+</body>
+</html>
